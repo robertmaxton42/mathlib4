@@ -559,6 +559,7 @@ lemma CWComplex.cellFrontier_subset_finite_openCell [CWComplex C] (n : ℕ) (i :
     cellFrontier n i ⊆ ⋃ (m < n) (j ∈ I m), openCell m j := by
   simpa using RelCWComplex.cellFrontier_subset_finite_openCell n i
 
+variable (C) in
 /-- A relative CW complex is coherent with its base and the closed cells. -/
 lemma RelCWComplex.isCoherentWith_closedCells [T2Space X] [𝓔 : RelCWComplex C D] :
     IsCoherentWith (insert (C ↓∩ D) (range (Sigma.rec fun n j ↦ C ↓∩ 𝓔.closedCell n j))) := by
@@ -594,6 +595,7 @@ lemma RelCWComplex.isCoherentWith_closedCells [T2Space X] [𝓔 : RelCWComplex C
     simp at htD
     simpa [← htD] using IsClosed.inter isClosed tD_closed
 
+variable (C) in
 /-- A CW complex is coherent with its closed cells. -/
 lemma CWComplex.isCoherentWith_closedCells [T2Space X] [𝓔 : CWComplex C] :
     IsCoherentWith (range (Sigma.rec fun n (j : cell C n) ↦ C ↓∩ CWComplex.closedCell n j)) := by
@@ -1009,6 +1011,22 @@ lemma RelCWComplex.disjoint_interior_base_iUnion_closedCell [T2Space X] [RelCWCo
   simp_rw [disjoint_iff_inter_eq_empty, inter_iUnion, disjoint_interior_base_closedCell.inter_eq,
     iUnion_empty]
 
+
+/-- All cell frontiers are disjoint from open cells of the same or higher dimension. -/
+lemma RelCWComplex.disjoint_openCell_cellFrontier [RelCWComplex C D]
+    {n m : ℕ} (h : m ≤ n) (j : cell C n) (k : cell C m) :
+    Disjoint (openCell n j) (cellFrontier m k) := by
+  · obtain ⟨I, hI⟩ := cellFrontier_subset_finite_openCell m k
+    fapply disjoint_of_subset_right hI
+    simp_rw [disjoint_union_right, disjoint_iUnion_right]
+    split_ands
+    · fapply disjoint_of_subset_left (subset_iUnion₂ _ _)
+      symm
+      exact disjoint_base_iUnion_openCell
+    · rintro k hk i hi
+      replace hk : n ≠ k := ne_of_gt (trans hk h)
+      exact disjoint_openCell_of_ne (by simp [hk])
+
 namespace CWComplex
 
 export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_closedCell
@@ -1025,7 +1043,7 @@ export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_cl
   skeleton_union_iUnion_closedCell_eq_skeleton_succ iUnion_skeletonLT_eq_complex
   iUnion_skeleton_eq_complex eq_of_not_disjoint_openCell disjoint_skeletonLT_openCell
   disjoint_skeleton_openCell skeletonLT_inter_closedCell_eq_skeletonLT_inter_cellFrontier
-  skeleton_inter_closedCell_eq_skeleton_inter_cellFrontier)
+  skeleton_inter_closedCell_eq_skeleton_inter_cellFrontier disjoint_openCell_cellFrontier)
 
 end CWComplex
 

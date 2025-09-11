@@ -71,7 +71,7 @@ lemma RelCWComplex.Subcomplex.disjoint_openCell_subcomplex_of_not_mem [RelCWComp
 open Classical in
 /-- A subcomplex is again a CW complex. -/
 @[simps]
-instance RelCWComplex.Subcomplex.instRelCWComplex [T2Space X] [RelCWComplex C D]
+instance RelCWComplex.Subcomplex.toComplex [T2Space X] [RelCWComplex C D]
     (E : Subcomplex C) : RelCWComplex E D where
   cell n := E.I n
   map n i := map (C := C) n i
@@ -110,7 +110,7 @@ instance RelCWComplex.Subcomplex.instRelCWComplex [T2Space X] [RelCWComplex C D]
   union' := union_closedCell E
 
 /-- A subcomplex is again a CW complex. -/
-instance CWComplex.Subcomplex.instCWComplex [T2Space X] [CWComplex C] (E : Subcomplex C) :
+instance CWComplex.Subcomplex.toComplex [T2Space X] [CWComplex C] (E : Subcomplex C) :
     CWComplex (E : Set X) :=
   RelCWComplex.toCWComplex (E : Set X)
 

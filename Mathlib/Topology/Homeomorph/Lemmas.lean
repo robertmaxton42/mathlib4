@@ -414,6 +414,20 @@ def funSplitAt : (ι → Y) ≃ₜ Y × ({ j // j ≠ i } → Y) :=
 
 end
 
+/-- Equal types are homeomorphic, so long as their topologies are equal too. (This is `Equiv.cast`
+as a homeomorphism.) -/
+@[simps!]
+def cast {X Y} [instX : TopologicalSpace X] [instY : TopologicalSpace Y] (h₀ : X = Y)
+    (_ : instX ≍ instY) : X ≃ₜ Y where
+  __ := Equiv.cast h₀
+
+/-- Equal members of a family of topological spaces are homeomorphic. (A common special case
+of `Homeomorph.cast`.) -/
+@[simps!]
+def congrFun {α : Type*} {X : α → Type*} [inst_a : (a : α) → TopologicalSpace (X a)]
+    {a b : α} (h : a = b) : X a ≃ₜ X b :=
+  cast (congrArg X h) (by cases h; rfl)
+
 end Homeomorph
 
 namespace Topology.IsEmbedding

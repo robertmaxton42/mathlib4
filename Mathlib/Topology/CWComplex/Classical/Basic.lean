@@ -615,7 +615,7 @@ namespace RelCWComplex
 
 /-- A subcomplex is a closed subspace of a CW complex that is the union of open cells of the
   CW complex. -/
-structure Subcomplex (C : Set X) {D : Set X} [RelCWComplex C D] where
+structure Subcomplex (C : Set X) {D : Set X} [𝓔 : RelCWComplex C D] where
   /-- The underlying set of the subcomplex. -/
   carrier : Set X
   /-- The indexing set of cells of the subcomplex. -/
@@ -791,7 +791,7 @@ the base and some points.
 The standard `skeleton` is defined in terms of `skeletonLT`. `skeletonLT` is preferred
 in statements. You should then derive the statement about `skeleton`. -/
 @[simps! -isSimp, irreducible]
-def skeletonLT (C : Set X) {D : Set X} [RelCWComplex C D] (n : ℕ∞) : Subcomplex C :=
+def skeletonLT (C : Set X) {D : Set X} [𝓔 : RelCWComplex C D] (n : ℕ∞) : Subcomplex C :=
     Subcomplex.mk' _ (D ∪ ⋃ (m : ℕ) (_ : m < n) (j : cell C m), closedCell m j)
     (fun l ↦ {x : cell C l | l < n})
     (by
@@ -808,7 +808,7 @@ def skeletonLT (C : Set X) {D : Set X} [RelCWComplex C D] (n : ℕ∞) : Subcomp
 
 /-- The `n`-skeleton of a CW complex, for `n ∈ ℕ ∪ {∞}`. For statements use `skeletonLT` instead
 and then derive the statement about `skeleton`. -/
-abbrev skeleton (C : Set X) {D : Set X} [RelCWComplex C D] (n : ℕ∞) : Subcomplex C :=
+abbrev skeleton (C : Set X) {D : Set X} [𝓔 : RelCWComplex C D] (n : ℕ∞) : Subcomplex C :=
   skeletonLT C (n + 1)
 
 end RelCWComplex
@@ -824,6 +824,9 @@ lemma RelCWComplex.skeletonLT_zero_eq_base [RelCWComplex C D] : skeletonLT C 0 =
 
 lemma CWComplex.skeletonLT_zero_eq_empty [CWComplex C] : (skeletonLT C 0 : Set X) = ∅ :=
     RelCWComplex.skeletonLT_zero_eq_base
+
+instance CWComplex.instIsEmptySkeletonLTZero [CWComplex C] : IsEmpty (skeletonLT C (0 : ℕ)) :=
+  isEmpty_coe_sort.mpr skeletonLT_zero_eq_empty
 
 @[simp] lemma RelCWComplex.skeletonLT_top [RelCWComplex C D] : skeletonLT C ⊤ = C := by
   simp [coe_skeletonLT, union]
@@ -917,6 +920,13 @@ lemma RelCWComplex.iUnion_openCell_eq_skeleton [RelCWComplex C D] (n : ℕ∞) :
     D ∪ ⋃ (m : ℕ) (_ : m < n + 1) (j : cell C m), openCell m j = skeleton C n :=
   iUnion_openCell_eq_skeletonLT _
 
+lemma RelCWComplex.skeletonLT_union_iUnion_openCell_eq_skeletonLT_succ [RelCWComplex C D] (n : ℕ) :
+    ↑(skeletonLT C n) ∪ ⋃ (j : cell C n), openCell n j = skeletonLT C (n + 1) := by
+  simp_rw [← iUnion_openCell_eq_skeletonLT, union_assoc, ENat.coe_lt_coe,
+  ← biUnion_le (fun i ↦ ⋃ (j : cell C i), openCell i j) n, ← Nat.lt_succ_iff, Nat.succ_eq_add_one,
+  ← ENat.coe_lt_coe]
+  rfl
+
 lemma CWComplex.iUnion_openCell_eq_skeleton [CWComplex C] (n : ℕ∞) :
     ⋃ (m : ℕ) (_ : m < n + 1) (j : cell C m), openCell m j = skeleton C n :=
   iUnion_openCell_eq_skeletonLT _
@@ -1009,6 +1019,21 @@ lemma RelCWComplex.disjoint_interior_base_iUnion_closedCell [T2Space X] [RelCWCo
   simp_rw [disjoint_iff_inter_eq_empty, inter_iUnion, disjoint_interior_base_closedCell.inter_eq,
     iUnion_empty]
 
+/-- All cell frontiers are disjoint from open cells of the same dimension. -/
+lemma RelCWComplex.disjoint_openCell_cellFrontier [RelCWComplex C D]
+    {n m : ℕ} (h : m ≤ n) (j : cell C n) (k : cell C m) :
+    Disjoint (openCell n j) (cellFrontier m k)  := by
+  obtain ⟨I, hI⟩ := cellFrontier_subset_finite_openCell m k
+  fapply disjoint_of_subset_right hI
+  simp_rw [disjoint_union_right, disjoint_iUnion_right]
+  split_ands
+  · fapply disjoint_of_subset_left (subset_iUnion₂ _ _)
+    symm
+    exact disjoint_base_iUnion_openCell
+  · rintro k hk i hi
+    replace hk : n ≠ k := ne_of_gt (trans hk h)
+    exact disjoint_openCell_of_ne (by simp [hk])
+
 namespace CWComplex
 
 export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_closedCell
@@ -1017,7 +1042,7 @@ export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_cl
   isClosed_cellFrontier closure_openCell_eq_closedCell skeletonLT_top skeleton_top skeletonLT_mono
   skeleton_mono skeletonLT_monotone skeleton_monotone closedCell_subset_skeletonLT
   closedCell_subset_skeleton closedCell_subset_complex openCell_subset_skeletonLT
-  openCell_subset_skeleton
+  openCell_subset_skeleton skeletonLT_union_iUnion_openCell_eq_skeletonLT_succ
   openCell_subset_complex cellFrontier_subset_skeletonLT cellFrontier_subset_skeleton
   cellFrontier_subset_complex iUnion_cellFrontier_subset_skeletonLT
   iUnion_cellFrontier_subset_skeleton closedCell_zero_eq_singleton openCell_zero_eq_singleton
@@ -1025,7 +1050,7 @@ export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_cl
   skeleton_union_iUnion_closedCell_eq_skeleton_succ iUnion_skeletonLT_eq_complex
   iUnion_skeleton_eq_complex eq_of_not_disjoint_openCell disjoint_skeletonLT_openCell
   disjoint_skeleton_openCell skeletonLT_inter_closedCell_eq_skeletonLT_inter_cellFrontier
-  skeleton_inter_closedCell_eq_skeleton_inter_cellFrontier)
+  skeleton_inter_closedCell_eq_skeleton_inter_cellFrontier disjoint_openCell_cellFrontier)
 
 end CWComplex
 

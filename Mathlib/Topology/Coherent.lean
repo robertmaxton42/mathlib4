@@ -115,4 +115,65 @@ lemma isQuotientMap_sigma_desc (hX : IsCoherentWith S) (hS : ⋃₀ S = univ) :
   IsCoherentWith.isQuotientMap_sigma_desc' (S := ((↑) : S → Set X))
     (h ▸ hX) (sUnion_eq_iUnion ▸ hS)
 
+variable {S : Set (Set X)} (hS : IsCoherentWith S) (surj : ⋃₀ S = Set.univ) (F : ∀ s ∈ S, C(s, Y))
+  (hF : ∀ (s) (hs : s ∈ S) (t) (ht : t ∈ S) (x : X) (hxs : x ∈ s) (hxt : x ∈ t),
+    F s hs ⟨x, hxs⟩ = F t ht ⟨x, hxt⟩)
+
+/-- A family `F s` of continuous maps `C(s, Y)`, where (1) the domains `s` are taken from a set `A`
+of sets in `X` which are jointly surjective and coherent with `X` and (2) the functions `F s` agree
+pairwise on intersections, can be glued to construct a continuous map `C(X, Y)`. -/
+noncomputable def liftCover : C(X, Y) where
+  toFun := Set.liftCover ((↑) : S → Set X) (fun s ↦ F s s.2) (fun s t ↦ hF s s.2 t t.2)
+    (by simp [sUnion_eq_iUnion, ← surj])
+  continuous_toFun := by
+    rw [hS.continuous_iff, Subtype.forall']
+    intro s
+    rw [continuousOn_iff_continuous_restrict, Set.liftCover_restrict]
+    exact (F s s.2).continuous
+
+variable {hS surj F hF}
+
+@[simp]
+theorem liftCover_coe {s : S} (x : (s : Set X)) : hS.liftCover surj F hF x = F s s.2 x := by
+  simp [IsCoherentWith.liftCover]
+
+@[simp]
+theorem liftCover_of_mem_coe {s : Set X} (hs : s ∈ S) (x : s) :
+    hS.liftCover surj F hF x = F s hs x :=
+  hS.liftCover_coe (s := ⟨s, hs⟩) x
+
+theorem liftCover_of_mem {s : Set X} (hs : s ∈ S) {x : X} (hx : x ∈ s) :
+    hS.liftCover surj F hF x = F s hs ⟨x, hx⟩ :=
+  hS.liftCover_of_mem_coe hs ⟨x, hx⟩
+
+theorem preimage_liftCover (t : Set Y) :
+    hS.liftCover surj F hF ⁻¹' t = ⋃ s : S, (↑) '' (F s s.2 ⁻¹' t) := by
+  simp only [IsCoherentWith.liftCover, ContinuousMap.coe_mk]
+  rw [Set.preimage_liftCover]
+
+@[simp]
+theorem liftCover_restrict (s : Set X) (hs : s ∈ S) :
+    s.restrict (hS.liftCover surj F hF) = F s hs := by
+  ext x; simp [hs]
+
+variable (hS surj) in
+/-- When `X` is coherent with a set of subspaces `S`, every continuous map out of `X` can be
+written as a `liftCover`. -/
+@[simps]
+noncomputable def liftEquiv :
+    { F : ∀ s ∈ S, C(s, Y) // ∀ s (hs : s ∈ S) t (ht : t ∈ S) x (hxs : x ∈ s) (hxt : x ∈ t),
+       F s hs ⟨x, hxs⟩ = F t ht ⟨x, hxt⟩ } ≃ C(X, Y) where
+  toFun F := hS.liftCover surj F F.2
+  invFun f := ⟨fun s hs ↦ f.restrict s, fun s hs t ht x hxs hxt ↦ by simp⟩
+  left_inv := by rintro ⟨F, hF⟩; ext s hs x; simp [hs]
+  right_inv f := by
+    ext x
+    rw [sUnion_eq_univ_iff] at surj
+    obtain ⟨s, hs, hxs⟩ := surj x
+    simp [liftCover_of_mem hs hxs]
+
+/-- A version of `liftEquiv_apply` that is more convenient when rewriting. -/
+lemma liftEquiv_apply' : hS.liftCover surj F hF = hS.liftEquiv surj ⟨F, hF⟩ := by rfl
+
+
 end Topology.IsCoherentWith

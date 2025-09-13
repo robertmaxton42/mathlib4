@@ -563,35 +563,22 @@ lemma CWComplex.cellFrontier_subset_finite_openCell [CWComplex C] (n : ℕ) (i :
 lemma RelCWComplex.isCoherentWith_closedCells [T2Space X] [𝓔 : RelCWComplex C D] :
     IsCoherentWith (insert (C ↓∩ D) (range (Sigma.rec fun n j ↦ C ↓∩ 𝓔.closedCell n j))) := by
   apply IsCoherentWith.of_isClosed
-  intro t ht
-  have hC {s : Set X} (hs : IsClosed s) : IsClosed (C ↓∩ s) := by
-    rw [IsClosed.inter_preimage_val_iff isClosed]
-    exact IsClosed.inter isClosed hs
-  have hC' : coinduced (↑) (inferInstanceAs (TopologicalSpace C)) ≤ ‹TopologicalSpace X› := by
-    rw [coinduced_le_iff_le_induced]
-    exact continuous_subtype_val.le_induced
-  replace hC' s := hC' s
-  simp_rw [forall_mem_insert, forall_mem_range, Sigma.forall] at ht
+  simp_intro t ht .. only [forall_mem_insert, forall_mem_range, Sigma.forall]
   rcases ht with ⟨htD, ht_cells⟩
-  simp only [isClosedBase C, hC, IsClosed.inter_preimage_val_iff,
-    isClosed_closedCell] at htD ht_cells
-  rw [isClosed_induced_iff]
+  simp only [IsClosed.preimage_val _ |>.inter_preimage_val_iff, isClosedBase C,
+  isClosed_closedCell] at htD ht_cells
+  simp_rw [isClosed_induced_iff] at htD ht_cells ⊢
   refine ⟨Subtype.val '' t, ?closed, by simp⟩
   rw [closed C _ (Subtype.coe_image_subset C t)]
-  constructor
+  split_ands
   · intro n j
-    specialize ht_cells n j
-    rw [isClosed_induced_iff] at ht_cells
-    rcases ht_cells with ⟨tnj, tnj_closed, htnj⟩
-    apply_fun (image Subtype.val) at htnj
-    rw [← inter_comm, ← inter_eq_self_of_subset_right (closedCell_subset_complex n j)]
-    simp at htnj
+    rcases ht_cells n j with ⟨tnj, tnj_closed, htnj⟩
+    rw [inter_comm, ← inter_eq_self_of_subset_right (closedCell_subset_complex n j)]
+    apply_fun (image Subtype.val) at htnj; simp at htnj
     simpa [← htnj] using IsClosed.inter isClosed tnj_closed
-  · rw [isClosed_induced_iff] at htD
-    rcases htD with ⟨tD, tD_closed, htD⟩
-    apply_fun (image Subtype.val) at htD
+  · rcases htD with ⟨tD, tD_closed, htD⟩
     rw [inter_comm, ← inter_eq_self_of_subset_right (base_subset_complex (C := C))]
-    simp at htD
+    apply_fun (image Subtype.val) at htD; simp at htD
     simpa [← htD] using IsClosed.inter isClosed tD_closed
 
 /-- A CW complex is coherent with its closed cells. -/
@@ -1034,6 +1021,23 @@ lemma RelCWComplex.disjoint_openCell_cellFrontier [RelCWComplex C D]
     replace hk : n ≠ k := ne_of_gt (trans hk h)
     exact disjoint_openCell_of_ne (by simp [hk])
 
+/-- A point that is known to be in `Metric.closedBall 0 1` that is also in the preimage of
+a cell frontier is in `Metric.sphere 0 1`. -/
+lemma RelCWComplex.map_mem_cellFrontier_iff [RelCWComplex C D] {n} {j : cell C n} {x}
+    (hx : x ∈ Metric.closedBall 0 1) : map n j x ∈ cellFrontier n j ↔ x ∈ Metric.sphere 0 1 := by
+  have : x ∈ Metric.ball 0 1 → (map n j x) ∉ cellFrontier n j := by
+    intro hx hx'
+    have : (map n j x) ∈ openCell n j := mem_image_of_mem _ hx
+    exact (disjoint_openCell_cellFrontier (le_refl _) _ _).notMem_of_mem_right hx' this
+  constructor
+  · rintro ⟨y, hy, h⟩
+    by_contra hx'
+    replace hx : ‖x - 0‖ < 1 := by simpa using lt_of_le_of_ne hx hx'
+    rw [← mem_ball_iff_norm] at hx
+    fapply this hx
+    rw [← h]; exact mem_image_of_mem _ hy
+  · intro hx; exact ⟨x, hx, rfl⟩
+
 namespace CWComplex
 
 export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_closedCell
@@ -1044,7 +1048,7 @@ export RelCWComplex (pairwiseDisjoint disjoint_openCell_of_ne openCell_subset_cl
   closedCell_subset_skeleton closedCell_subset_complex openCell_subset_skeletonLT
   openCell_subset_skeleton skeletonLT_union_iUnion_openCell_eq_skeletonLT_succ
   openCell_subset_complex cellFrontier_subset_skeletonLT cellFrontier_subset_skeleton
-  cellFrontier_subset_complex iUnion_cellFrontier_subset_skeletonLT
+  cellFrontier_subset_complex iUnion_cellFrontier_subset_skeletonLT map_mem_cellFrontier_iff
   iUnion_cellFrontier_subset_skeleton closedCell_zero_eq_singleton openCell_zero_eq_singleton
   cellFrontier_zero_eq_empty isClosed skeletonLT_union_iUnion_closedCell_eq_skeletonLT_succ
   skeleton_union_iUnion_closedCell_eq_skeleton_succ iUnion_skeletonLT_eq_complex

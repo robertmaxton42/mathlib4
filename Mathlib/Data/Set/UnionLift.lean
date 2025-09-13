@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Chris Hughes
 -/
 import Mathlib.Data.Set.Lattice
+import Mathlib.Data.Set.Subset
 import Mathlib.Order.Directed
 
 /-!
@@ -39,6 +40,7 @@ directed union, directed supremum, glue, gluing
 variable {α : Type*} {ι β : Sort _}
 
 namespace Set
+open Set.Notation
 
 section UnionLift
 
@@ -81,6 +83,10 @@ theorem preimage_iUnionLift (t : Set β) :
   · rintro ⟨i, ⟨y, hi⟩, h, hxy⟩
     obtain rfl : y = x := congr_arg Subtype.val hxy
     rwa [iUnionLift_of_mem x hi]
+
+theorem iUnionLift_restrict {i : ι} :
+    restrict (T ↓∩ S i) (iUnionLift S f hf T hT) = f i ∘ preimageValInclusion T (S i) := by
+  ext ⟨⟨x, hxT⟩, hxS⟩; simp at hxS; simp [iUnionLift_of_mem ⟨x, hxT⟩ hxS]
 
 /-- `iUnionLift_const` is useful for proving that `iUnionLift` is a homomorphism
   of algebraic structures when defined on the Union of algebraic subobjects.

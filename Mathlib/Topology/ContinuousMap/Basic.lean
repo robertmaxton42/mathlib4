@@ -528,7 +528,7 @@ section preimage_val
 open Set Set.Notation
 
 /-- The 'identity' function recognizing values of the intersection `s ↓∩ t` as values of `t`,
-as a continuous map.. -/
+as a continuous map. -/
 @[simp]
 def preimageValIncl (s t : Set α) : C(s ↓∩ t, t) where
   toFun := preimageValInclusion s t

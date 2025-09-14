@@ -199,6 +199,13 @@ lemma RelCWComplex.target_eq [RelCWComplex C D] n (i : cell C n) :
   unfold openCell
   rw [← source_eq (C := C) (i := i), PartialEquiv.image_source_eq_target]
 
+/-- `map n j` bundled into a continuous map from the disk to its closed cell. -/
+@[simps! apply]
+noncomputable def RelCWComplex.map' [RelCWComplex C D] (n : ℕ) (j : cell C n) :
+    C(Metric.closedBall (0 : EuclideanSpace ℝ (Fin n)) 1, closedCell n j) :=
+  ContinuousMap.mapsTo (map n j) (Metric.closedBall 0 1) (closedCell n j)
+    (mapsTo_image _ _) (continuousOn n j)
+
 namespace CWComplex
 
 export RelCWComplex (cell map source_eq continuousOn continuousOn_symm mapsTo isClosedBase openCell
@@ -1021,6 +1028,25 @@ lemma RelCWComplex.disjoint_openCell_cellFrontier [RelCWComplex C D]
     replace hk : n ≠ k := ne_of_gt (trans hk h)
     exact disjoint_openCell_of_ne (by simp [hk])
 
+/-- The intersection of two closed cells of the same dimension is contained in the cell frontier
+of the first cell. -/
+@[simp]
+lemma RelCWComplex.inter_closedCell_subset_cellFrontier_left [RelCWComplex C D]
+    {n} {j₁ j₂ : cell C n} (hj : j₁ ≠ j₂) :
+    closedCell n j₁ ∩ closedCell n j₂ ⊆ cellFrontier n j₁ := by
+  have : Sigma.mk n j₁ ≠ Sigma.mk n j₂ := by simp [hj]
+  simp [← cellFrontier_union_openCell_eq_closedCell, inter_union_distrib_left,
+  union_inter_distrib_right, (disjoint_openCell_cellFrontier (le_refl _) j₁ j₂).inter_eq,
+  (disjoint_openCell_of_ne this).inter_eq]
+
+/-- The intersection of two closed cells of the same dimension is contained in the cell frontier
+of the first cell. -/
+@[simp]
+lemma RelCWComplex.inter_closedCell_subset_cellFrontier_right [RelCWComplex C D]
+    {n} {j₁ j₂ : cell C n} (hj : j₁ ≠ j₂) :
+    closedCell n j₁ ∩ closedCell n j₂ ⊆ cellFrontier n j₂ := by
+  rw [inter_comm]; exact inter_closedCell_subset_cellFrontier_left hj.symm
+
 /-- A point that is known to be in `Metric.closedBall 0 1` that is also in the preimage of
 a cell frontier is in `Metric.sphere 0 1`. -/
 lemma RelCWComplex.map_mem_cellFrontier_iff [RelCWComplex C D] {n} {j : cell C n} {x}
@@ -1037,6 +1063,36 @@ lemma RelCWComplex.map_mem_cellFrontier_iff [RelCWComplex C D] {n} {j : cell C n
     fapply this hx
     rw [← h]; exact mem_image_of_mem _ hy
   · intro hx; exact ⟨x, hx, rfl⟩
+
+/-- If for some `x, y`, `x ≠ y` and `x, y ∈ Metric.closedBall 0 1` we have `map n j x = map n k y`,
+then `x` and `y` are both `∈ Metric.sphere 0 1`. -/
+lemma RelCWComplex.mem_sphere_of_map_eq [RelCWComplex C D] {n} {j k : cell C n} {x y} (hxy : x ≠ y)
+    (hx : x ∈ Metric.closedBall 0 1) (hy : y ∈ Metric.closedBall 0 1)
+    (h : map n j x = map n k y) : x ∈ Metric.sphere 0 1 ∧ y ∈ Metric.sphere 0 1 := by
+  rcases em (j = k) with rfl | hjk
+  · by_contra h'
+    rw [not_and_or] at h'
+    wlog hx' : x ∉ Metric.sphere 0 1 generalizing x y
+    · rw [Classical.not_not] at hx'
+      have h'' := h'.neg_resolve_left hx'
+      exact this hxy.symm hy hx h.symm h'.symm h''
+    · rw [← Metric.ball_union_sphere] at hx hy
+      replace hx := Or.resolve_right hx hx'
+      rcases hy with hy | hy
+      · rw [← source_eq n j] at hx hy
+        exact hxy <| (map n j).injOn hx hy h
+      · replace hx : (map n j) x ∈ openCell n j := mem_image_of_mem _ hx
+        replace hy : (map n j) y ∈ cellFrontier n j := mem_image_of_mem _ hy
+        rw [h] at hx
+        exact (disjoint_openCell_cellFrontier n.le_refl _ _).notMem_of_mem_right hy hx
+  · push_neg at hjk
+    split_ands
+    · have := inter_closedCell_subset_cellFrontier_left hjk
+        ⟨mem_image_of_mem _ hx, h ▸ mem_image_of_mem _ hy⟩
+      rwa [map_mem_cellFrontier_iff hx] at this
+    · have := inter_closedCell_subset_cellFrontier_left hjk.symm
+        ⟨mem_image_of_mem _ hy, h ▸ mem_image_of_mem _ hx⟩
+      rwa [map_mem_cellFrontier_iff hy] at this
 
 namespace CWComplex
 

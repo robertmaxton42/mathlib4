@@ -530,7 +530,7 @@ open Set Set.Notation
 /-- The 'identity' function recognizing values of the intersection `s ↓∩ t` as values of `t`,
 as a continuous map. -/
 @[simp]
-def preimageValIncl (s t : Set α) : C(s ↓∩ t, t) where
+def preimageValIncl {s t : Set α} : C(s ↓∩ t, t) where
   toFun := preimageValInclusion s t
   continuous_toFun := by unfold preimageValInclusion; continuity
 
@@ -545,7 +545,7 @@ def inclPreimageVal {s t : Set α} (h : s ⊆ t) : C(s, t ↓∩ s) where
 @[simps]
 def _root_.Homeomorph.Set.preimageVal {s t : Set α} (h : s ⊆ t) : s ≃ₜ t ↓∩ s where
   toFun := inclPreimageVal h
-  invFun := preimageValIncl t s
+  invFun := preimageValIncl
   continuous_invFun := ContinuousMap.continuous _
 
 open Set in

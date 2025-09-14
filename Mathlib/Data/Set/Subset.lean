@@ -166,6 +166,10 @@ variable (s t) in
 @[simp]
 def preimageValInclusion : s ↓∩ t → t := fun x ↦ ⟨x, by simpa [-Subtype.coe_prop] using x.2⟩
 
+lemma preimageValInclusion_injective : (preimageValInclusion s t).Injective := by
+  rintro ⟨x, hx⟩ ⟨y, hy⟩ h
+  simpa [Subtype.val_inj] using h
+
 /-- When `s ⊆ t`, `s ≃ t ↓∩ s`. -/
 @[simps]
 def _root_.Equiv.Set.preimageVal (h : s ⊆ t) : s ≃ t ↓∩ s where

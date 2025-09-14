@@ -212,6 +212,22 @@ lemma isCoherentWith_skeleton :
   · simpa using .inl (preimage_mono skeletonLT_zero_eq_base.subset)
   · simpa using .inr ⟨n, le_refl _⟩
 
+/-- Each `n + 1`-skeleton is coherent with with its predecessor and the cells of dimension `n`. -/
+lemma skeletonLT_succ_isCoherentWith (n : ℕ) :
+    IsCoherentWith
+      (insert (↑(skeletonLT C ↑(n + 1)) ↓∩ (skeletonLT C n : Set X))
+        (range (↑(skeletonLT C ↑(n + 1)) ↓∩ 𝓔.closedCell n ·))) := by
+  fapply (skeletonLT C ↑(n + 1)).toComplex.isCoherentWith_closedCells.enlarge
+  simp_rw [forall_mem_insert, forall_mem_range, Sigma.forall, exists_mem_insert, exists_range_iff]
+  split_ands
+  · left; gcongr; exact Subcomplex.base_subset _
+  · rintro m ⟨j, hj⟩
+    simp only [skeletonLT_I, ENat.coe_lt_coe, Nat.lt_succ_iff_lt_or_eq] at hj
+    rcases hj with hm | rfl
+    · left; gcongr; grw [Subcomplex.closedCell_eq, closedCell_subset_skeletonLT m _]
+      simpa using 𝓔.skeletonLT_mono (ENat.coe_le_coe.mpr <| Nat.succ_le_of_lt hm)
+    · right; use j; rfl
+
 /-- Descend from a relative CW complex, by providing continuous maps for each skeleton (and the
 base) that agree where they intersect. -/
 def descBySkeletonLT (f : (n : ℕ) → C(skeletonLT C n, Z))

@@ -301,6 +301,8 @@ lemma coe_lt_coe {n m : ℕ} : (n : ℕ∞) < (m : ℕ∞) ↔ n < m := by simp
 
 lemma coe_le_coe {n m : ℕ} : (n : ℕ∞) ≤ (m : ℕ∞) ↔ n ≤ m := by simp
 
+lemma coe_le_succ {n : ℕ} : (n : ℕ∞) ≤ n + 1 := by simp
+
 @[elab_as_elim]
 theorem nat_induction {motive : ℕ∞ → Prop} (a : ℕ∞) (zero : motive 0)
     (succ : ∀ n : ℕ, motive n → motive n.succ)

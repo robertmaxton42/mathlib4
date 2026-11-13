@@ -291,6 +291,21 @@ def createsLimitOfReflectsIsomorphismsOfPreserves {K : J ⥤ C} {F : C ⥤ D} [F
   createsLimitOfReflectsIso' (isLimitOfPreserves F (limit.isLimit _))
     ⟨⟨_, Iso.refl _⟩, limit.isLimit _⟩
 
+/-- If `F` reflects isomorphisms, `C` has limits of shape `J` and `F` preserves them, then `F`
+creates limits of shape `J`. -/
+@[instance_reducible]
+def createsLimitsOfShapeOfReflectsIsomorphismsOfPreserves {F : C ⥤ D} [F.ReflectsIsomorphisms]
+    [HasLimitsOfShape J C] [PreservesLimitsOfShape J F] : CreatesLimitsOfShape J F where
+  CreatesLimit := createsLimitOfReflectsIsomorphismsOfPreserves
+
+/-- If `F` reflects isomorphisms, `C` has limits of size `(w, w')` and `F` preserves them, then `F`
+creates limits of size `(w, w')`. -/
+@[instance_reducible]
+def createsLimitsOfReflectsIsomorphismsOfPreserves {F : C ⥤ D} [F.ReflectsIsomorphisms]
+    [HasLimitsOfSize.{w', w} C] [PreservesLimitsOfSize.{w', w} F] :
+    CreatesLimitsOfSize.{w', w} F where
+  CreatesLimitsOfShape := createsLimitsOfShapeOfReflectsIsomorphismsOfPreserves
+
 -- Notice however that even if the isomorphism is `Iso.refl _`,
 -- this construction will insert additional identity morphisms in the cone maps,
 -- so the constructed limits may not be ideal, definitionally.
@@ -412,6 +427,21 @@ def createsColimitOfReflectsIsomorphismsOfPreserves {K : J ⥤ C} {F : C ⥤ D}
     [F.ReflectsIsomorphisms] [HasColimit K] [PreservesColimit K F] : CreatesColimit K F :=
   createsColimitOfReflectsIso' (isColimitOfPreserves F (colimit.isColimit _))
     ⟨⟨_, Iso.refl _⟩, colimit.isColimit _⟩
+
+/-- If `F` reflects isomorphisms, `C` has colimits of shape `J` and `F` preserves them, then `F`
+creates colimits of shape `J`. -/
+@[instance_reducible]
+def createsColimitsOfShapeOfReflectsIsomorphismsOfPreserves {F : C ⥤ D} [F.ReflectsIsomorphisms]
+    [HasColimitsOfShape J C] [PreservesColimitsOfShape J F] : CreatesColimitsOfShape J F where
+  CreatesColimit := createsColimitOfReflectsIsomorphismsOfPreserves
+
+/-- If `F` reflects isomorphisms, `C` has colimits of size `(w, w')` and `F` preserves them, then
+`F` creates colimits of size `(w, w')`. -/
+@[instance_reducible]
+def createsColimitsOfReflectsIsomorphismsOfPreserves {F : C ⥤ D} [F.ReflectsIsomorphisms]
+    [HasColimitsOfSize.{w', w} C] [PreservesColimitsOfSize.{w', w} F] :
+    CreatesColimitsOfSize.{w', w} F where
+  CreatesColimitsOfShape := createsColimitsOfShapeOfReflectsIsomorphismsOfPreserves
 
 -- Notice however that even if the isomorphism is `Iso.refl _`,
 -- this construction will insert additional identity morphisms in the cocone maps,
